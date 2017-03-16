@@ -39,20 +39,31 @@
 
 #define OVERRIDE
 
-#ifdef WIN32
-#define ALWAYS_INLINE __forceinline
-#define NO_INLINE __declspec(noinline)
+#if defined(__GNUC__) && (__GNUC__ >= 4)
+#define ALWAYS_INLINE __attribute__((__always_inline__))
+#define NO_INLINE __attribute__((__noinline__))
+#elif defined(_MSC_VER) && (_MSC_VER >= 1200)
+#  define ALWAYS_INLINE __forceinline
+#  if _MSC_VER >= 1310
+#    define NO_INLINE __declspec(noinline)
+#  else
+#    define NO_INLINE
+#  endif
 #else
-#define ALWAYS_INLINE __attribute__((always_inline))
-#define NO_INLINE __declspec(noinline)
+#  define ALWAYS_INLINE
+#  define NO_INLINE
 #endif
 
 #define no_alias __restrict
 #define rst // no_alias
 
-// TODO: Implement these.
-#define LIKELY(x) x
-#define UNLIKELY(x) x
+#if defined(__GNUC__) && (__GNUC__ >= 3)
+#define LIKELY(x) __builtin_expect(!!(x), 1)
+#define UNLIKELY(x) __builtin_expect(!!(x), 0)
+#else
+#define LIKELY(x) !!(x)
+#define UNLIKELY(x) !!(x)
+#endif
 
 #ifdef _DEBUG
 static const bool kIsDebugBuild = true;
@@ -60,10 +71,16 @@ static const bool kIsDebugBuild = true;
 static const bool kIsDebugBuild = false;
 #endif
 
-#ifdef _MSC_VER
-#define ASSUME(x) __assume(x)
+#if defined(_MSC_VER) && (_MSC_VER >= 1310)
+#  define ASSUME(x) __assume(x)
+#elif defined(__has_builtin)
+#  if __has_builtin(__builtin_assume)
+#    define ASSUME(x) __builtin_assume(x)
+#  else
+#    define ASSUME(x)
+#  endif
 #else
-#define ASSUME(x)
+#  define ASSUME(x)
 #endif
 
 typedef uint32_t hash_t;
