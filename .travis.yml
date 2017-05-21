@@ -1,0 +1,26 @@
+language: cpp
+sudo: false
+dist: trusty
+
+matrix:
+  include:
+    - env: CXX_COMPILER=g++-6
+      addons:
+        apt:
+          sources:
+          - ubuntu-toolchain-r-test
+          packages:
+          - gcc-6
+          - g++-6
+    - env: CXX_COMPILER=clang++-3.9
+      addons:
+        apt:
+          sources:
+          - llvm-toolchain-precise-3.9
+          - ubuntu-toolchain-r-test
+          packages:
+          - clang-3.9
+
+script:
+  - export CXX="${CXX_COMPILER}"
+  - ./make.sh
